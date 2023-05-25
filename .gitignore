@@ -1,0 +1,9 @@
+.ipynb_checkpoints/
+*.egg-info/
+docker-compose.yml
+model.json
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
