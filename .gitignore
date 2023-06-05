@@ -5,6 +5,7 @@ model.json
 __pycache__/
 notebooks/
 temp/
+.streamlit/
 *.pyc
 *.pyo
 *.pyd
