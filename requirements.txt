@@ -12,3 +12,9 @@ streamlit>=1.10
 scikit-learn
 openai
 langchain
+pypdf
+chromadb
+tiktoken
+unstructured
+pdf2image
+tabulate

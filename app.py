@@ -1,51 +1,44 @@
-import openai 
+from chromadb.config import Settings
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import Chroma  # for the vectorization part
+from langchain.llms import OpenAI  # the LLM model we'll use (CHatGPT)
+from langchain.chains import RetrievalQA
 import streamlit as st
+import chromadb
+import os
 
-# pip install streamlit-chat  
-from streamlit_chat import message
+embeddings = OpenAIEmbeddings()
 
-openai.api_key = st.secrets["api_secret"]
-
-model = st.sidebar.select
-
-def generate_response(prompt):
-    completions = openai.Completion.create(
-        engine = "gpt-3.5-turbo",
-        prompt = prompt,
-        max_tokens = 1024,
-        n = 1,
-        stop = None,
-        temperature=0.5,
+client = chromadb.Client(
+    Settings(
+        chroma_db_impl="duckdb+parquet",
+        persist_directory="db/"
     )
-    message = completions.choices[0].text
-    return message 
+)
 
-#Creating the chatbot interface
-st.title("chatBot : Streamlit + openAI")
+st.title('Ask questions about your PDF')
 
-# Storing the chat
-if 'generated' not in st.session_state:
-    st.session_state['generated'] = []
+docs = [collection.name for collection in client.list_collections()]
 
-if 'past' not in st.session_state:
-    st.session_state['past'] = []
+document = st.selectbox("Choose document", options=docs)
 
-# We will get the user's input by calling the get_text function
-def get_text():
-    input_text = st.text_input("You: ","Hello, how are you?", key="input")
-    return input_text
+if document:
 
-user_input = get_text()
+    retriever = Chroma(embedding_function=embeddings,
+                       persist_directory="db/",
+                       collection_name=document
+                       ).as_retriever()
 
-if user_input:
-    output = generate_response(user_input)
-    # store the output 
-    st.session_state.past.append(user_input)
-    st.session_state.generated.append(output)
+    QA = RetrievalQA.from_chain_type(
+        llm=OpenAI(),
+        chain_type="map_reduce",#"stuff",
+        retriever=retriever
+    )
 
+    # Create a text input box for the user
+    question = st.text_input('Ask you question here')
 
-if st.session_state['generated']:
-    
-    for i in range(len(st.session_state['generated'])-1, -1, -1):
-        message(st.session_state["generated"][i], key=str(i))
-        message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+    # If the user hits enter
+    if question:
+        with st.spinner("Generating answer"):
+            st.write(QA.run(question))

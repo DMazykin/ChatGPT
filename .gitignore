@@ -3,6 +3,8 @@
 docker-compose.yml
 model.json
 __pycache__/
+notebooks/
+temp/
 *.pyc
 *.pyo
 *.pyd
