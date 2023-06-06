@@ -36,7 +36,7 @@ if document:
     )
 
     # Create a text input box for the user
-    question = st.text_input('Ask you question here')
+    question = st.text_input('Ask your question here')
 
     # If the user hits enter
     if question:
